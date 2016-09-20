@@ -5,7 +5,8 @@ apply plugin: 'groovy'
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
-def cucumberVersion = "1.2.4"
+def cucumberVersion = "1.2.5"
+def cucumberSandwichVersion = "2.8.0"
 
 repositories {
     mavenCentral()
@@ -17,15 +18,33 @@ configurations {
     }
 }
 
+clean{
+    delete "reports"
+}
+
 task cucumber() {
     dependsOn assemble
     doLast {
         javaexec {
             main = "cucumber.api.cli.Main"
             classpath = configurations.cucumberRuntime
-            args = ['--plugin', 'pretty', '--glue', 'src/test/groovy', 'src/test/resources']
+            args = ['--glue', 'src/test/groovy', 'src/test/resources',
+            '--plugin', 'html:reports/cucumber-simple-html-report',
+            // '--plugin', 'pretty:reports/cucumber-pretty-html-report',
+            '--plugin', 'json:reports/json/cucumber-json-report.json'
+            ]
+            //args = ['--help']
+        }
+        javaexec {
+            main = "net.masterthought.cucumber.sandwich.CucumberReportMonitor"
+            classpath = configurations.cucumberRuntime
+            args = ['-f', 'reports/json/ ',
+            '-o ', 'reports/', '-n'
+            ]
+            //args = ['--help']
 
         }
+
     }
 }
 
@@ -51,5 +70,5 @@ dependencies {
     testCompile 'junit:junit:4.11'
     testCompile "info.cukes:cucumber-junit:$cucumberVersion"
     testCompile "info.cukes:cucumber-groovy:$cucumberVersion"
-}
-
+    testCompile "net.masterthought:cucumber-sandwich:$cucumberSandwichVersion"
+  }
